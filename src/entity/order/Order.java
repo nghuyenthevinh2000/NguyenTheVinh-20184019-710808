@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import entity.cart.Cart;
+import entity.cart.CartMedia;
 import utils.Configs;
 
 public class Order {
@@ -14,6 +16,13 @@ public class Order {
 
     public Order(){
         this.lstOrderMedia = new ArrayList<>();
+        for (Object object : Cart.getCart().getListMedia()) {
+            CartMedia cartMedia = (CartMedia) object;
+            OrderMedia orderMedia = new OrderMedia(cartMedia.getMedia(), 
+                                                   cartMedia.getQuantity(), 
+                                                   cartMedia.getPrice());    
+            this.lstOrderMedia.add(orderMedia);
+        }
     }
 
     public Order(List lstOrderMedia) {

@@ -18,7 +18,7 @@ public class BaseController {
      * @return CartMedia or null
      */
     public CartMedia checkMediaInCart(Media media){
-        return Cart.getCart().checkMediaInCart(media);
+        return Cart.getCart().checkMediaInCart(media.getId());
     }
 
     /**

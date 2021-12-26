@@ -1,84 +1,90 @@
 package controller;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.logging.Logger;
+import controller.interface_group.IRushOrderInputValidator;
 
 /**
- * Class nay control hoat dong PlaceRushOrder
- * @author NguyenTheVinh-20184019
+ * This class controls the flow of place rush order use case in our AIMS project
+ * @author NguyenTheVinh-20183548
  */
-public class PlaceRushOrderController extends PlaceOrderController{
+public class PlaceRushOrderController {
 
-	public PlaceRushOrderController() {
-		super();
-	}
-	
-    /**
-     * cac tinh ho tro PlaceRushOrder
-     */
-    public static List<String> PROVINCE_LIST = List.of("Ha Noi",
-    		"Ha Tay", "Ha Giang", "Ha Nam");
+    private IRushOrderInputValidator rushOrderInputValidator;
 
-    /**
-     * Media id ho tro rush order
-     */
-    public static List<Integer> MEDIA_ID_LIST = List.of(1, 2, 3);
-    
-    /**
-     * Dam bao string khong co dau
-     * @param info string to check
-     * @return true/false
-     */
-    private boolean validateString(String info) {
-    	return info != null && info.matches("^[ a-zA-Z0-9]*$"); 
+    public PlaceRushOrderController(IRushOrderInputValidator rushOrderInputValidator) {
+        this.rushOrderInputValidator = rushOrderInputValidator;
     }
-    
+
     /**
-     * Kiem tra vi tri co support rush order hay khong
+     * Specify provinces that support rush order
+     */
+    public static List<String> PROVINCES_SUPPORT_RUSH_ODER = List.of("Hà Nam", "Hà Nội", "Nam Định");
+
+    /**
+     * Specify media id that support rush order
+     * Only media id = 38 for testing
+     */
+    public static List<Integer> MEDIA_IDS_SUPPORT_RUSH_ORDER = List.of(38);
+
+    /**
+     * Just for logging purpose
+     */
+    private static final Logger LOGGER = utils.Utils.getLogger(PlaceRushOrderController.class.getName());
+
+    public static final String RECEIVE_TIME_FORMATTER = "dd-MM-yyyy HH:mm";
+
+    /**
+     * Method checks user's location support rush order or not
      * @param location User's province
      */
-    public boolean validateLocation(String location) {
-        return location != null && PlaceRushOrderController.PROVINCE_LIST.contains(location);
+    public boolean isLocationSupportRushOrder(String location) {
+        if (location == null) {
+            return false;
+        }
+        return PROVINCES_SUPPORT_RUSH_ODER.contains(location);
     }
-    
+
     /**
-     * Kiem tra user's media ho tro rush order hay khong
+     * Method checks user's media support rush order or not
      * @param mediaID Cart's media id
      */
-    public boolean validateItems(int mediaID) {
-        return PlaceRushOrderController.MEDIA_ID_LIST.contains(mediaID);
+    public boolean isItemsSupportRushOrder(int mediaID) {
+        return MEDIA_IDS_SUPPORT_RUSH_ORDER.contains(mediaID);
     }
-    
+
     /**
-     * Kiem tra thoi gian nhan hang cua user
+     * Method checks user's info support rush order or not
+     * @param location User's province
+     * @param mediaID Cart's media id
+     */
+    public boolean isSupportRushOrder(String location, int mediaID) {
+        return isLocationSupportRushOrder(location) && isItemsSupportRushOrder(mediaID);
+    }
+
+    /**
+     * Method validates user's receive time
      * @param time User's receive time
      */
     public boolean validateReceiveTime(String time) {
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-            LocalDateTime localDateTime = LocalDateTime.parse(time, formatter);
-            // Get current date time
-            LocalDateTime currentDateTime = LocalDateTime.now();
-            return !localDateTime.isBefore(currentDateTime);
-        } catch (Exception e) {
-            return false;
-        }
+        return rushOrderInputValidator.isValidReceiveTime(time, RECEIVE_TIME_FORMATTER);
     }
-    
+
     /**
-     * Kiem tra user's rush thong tin don hang
+     * Method validates user's rush order info
      * @param info User's rush order info
      */
     public boolean validateRushOrderInfo(String info) {
-        return validateString(info);
+        return rushOrderInputValidator.isValidRushOrderInfo(info);
     }
-    
+
     /**
-     * Kiem tra chi dan cho don rush
+     * Method validates user's rush order instruction
      * @param instruction User's rush order instruction
      */
     public boolean validateRushOrderInstruction(String instruction) {
-        return validateString(instruction);
+        return rushOrderInputValidator.isValidRushOrderInstruction(instruction);
     }
+
+
 }

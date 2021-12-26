@@ -3,25 +3,37 @@ package controller;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
+import controller.interface_group.IShippingFeeCalculator;
 import entity.cart.Cart;
 import entity.cart.CartMedia;
-import common.exception.InvalidDeliveryInfoException;
 import entity.invoice.Invoice;
 import entity.order.Order;
 import entity.order.OrderMedia;
-import views.screen.popup.PopupScreen;
 
 /**
  * This class controls the flow of place order usecase in our AIMS project
  * @author nguyenlm
  */
 public class PlaceOrderController extends BaseController{
+	
+	/**
+     * For reduce hard code
+     */
+    public static final String ADDRESS = "address";
+    public static final String PHONE_NUMBER = "phone";
+    public static final String NAME = "name";
+
+    private IShippingFeeCalculator calculateShippingFee;
+
+    public PlaceOrderController() {
+    }
+
+    public PlaceOrderController(IShippingFeeCalculator calculateShippingFee) {
+        this.calculateShippingFee = calculateShippingFee;
+    }
 
     /**
      * Just for logging purpose
@@ -42,15 +54,7 @@ public class PlaceOrderController extends BaseController{
      * @throws SQLException
      */
     public Order createOrder() throws SQLException{
-        Order order = new Order();
-        for (Object object : Cart.getCart().getListMedia()) {
-            CartMedia cartMedia = (CartMedia) object;
-            OrderMedia orderMedia = new OrderMedia(cartMedia.getMedia(), 
-                                                   cartMedia.getQuantity(), 
-                                                   cartMedia.getPrice());    
-            order.getlstOrderMedia().add(orderMedia);
-        }
-        return order;
+        return new Order();
     }
 
     /**
@@ -80,8 +84,11 @@ public class PlaceOrderController extends BaseController{
    * @throws InterruptedException
    * @throws IOException
    */
-    public void validateDeliveryInfo(HashMap<String, String> info) throws InterruptedException, IOException{
-    	
+    public boolean validateDeliveryInfo(HashMap<String, String> info) throws InterruptedException, IOException{
+    	String address = info.get(ADDRESS);
+        String name = info.get(NAME);
+        String phoneNumber = info.get(PHONE_NUMBER);
+        return validateAddress(address) && validateName(name) && validatePhoneNumber(phoneNumber);
     }
     
     public boolean validatePhoneNumber(String phoneNumber) {
@@ -113,9 +120,6 @@ public class PlaceOrderController extends BaseController{
      * @return shippingFee
      */
     public int calculateShippingFee(Order order){
-        Random rand = new Random();
-        int fees = (int)( ( (rand.nextFloat()*10)/100 ) * order.getAmount() );
-        LOGGER.info("Order Amount: " + order.getAmount() + " -- Shipping Fees: " + fees);
-        return fees;
+    	 return calculateShippingFee.calculateShippingFee(order.getAmount());
     }
 }

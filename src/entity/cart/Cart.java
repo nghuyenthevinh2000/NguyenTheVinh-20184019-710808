@@ -66,9 +66,9 @@ public class Cart {
         if (!allAvai) throw new MediaNotAvailableException("Some media not available");
     }
 
-    public CartMedia checkMediaInCart(Media media){
+    public CartMedia checkMediaInCart(int id){
         for (CartMedia cartMedia : lstCartMedia) {
-            if (cartMedia.getMedia().getId() == media.getId()) return cartMedia;
+            if (cartMedia.getMedia().getId() == id) return cartMedia;
         }
         return null;
     }

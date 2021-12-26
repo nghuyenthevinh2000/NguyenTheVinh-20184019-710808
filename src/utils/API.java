@@ -22,73 +22,98 @@ import entity.payment.PaymentTransaction;
 
 /**
  * Class cung cap cac phuong thuc gui request len server va nhan du lieu tra ve
- * Date: 11/12/2021
- * @author nguyentv
+ * @author NguyenTheVinh
  * @version 1.0
  */
 public class API {
-	
+
 	/**
-	 * Thuoc tinh giup format ngay thang theo dinh dang
+	 * Thuoc tinh nay giup format ngay thang nam theo dinh dang
 	 */
-	public static DateFormat DATE_FORMATER = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-	
+	public static DateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
 	/**
-	 * Thuoc tinh giup log thong tin ra console
+	 * Thuoc tinh nay giup log ra thong tin o console
 	 */
 	private static Logger LOGGER = Utils.getLogger(Utils.class.getName());
-	
+
 	/**
-	 * Phuong thuc giup goi cac api dang GET
-	 * @param url: duong dan toi server can request
-	 * @param token: doan ma can cung cap de xac thuc nguoi dung
-	 * @return response: phan hoi tu server (string)
+	 * Phuong thuc goi cac API dang GET
+	 * @param url duong dan toi server can request
+	 * @param token doan ma bam cung cap de xac dinh thong tin nguoi dung
+	 * @return response cua server (o dang String)
 	 * @throws Exception
 	 */
 	public static String get(String url, String token) throws Exception {
-		
-		// phan 1: setup
-		LOGGER.info("Request URL: " + url + "\n");
-		HttpURLConnection conn = setUpConnection(token, url);
-		
-		// phan 2: doc du lieu tra ve tu server
-		String response = readRespone(conn);
-		return response;
+		// Setup
+		HttpURLConnection conn = getHttpURLConnection(url, "GET", token);
+		// Doc du lieu cua server tra ve
+		return readResponse(conn);
 	}
 
-	int var;
-	
 	/**
-	 * Phuong thuc giup goi cac api dang POST
-	 * @param url: duong dan toi server can request
-	 * @param data: du lieu dua len server de xu ly (JSON)
-	 * @return response: phan hoi tu server (string)
-	 * @throws Exception
+	 * Phuong thuc chuyen response cua server thanh dang String
+	 * @param conn connection to server
+	 * @return response in string type
+	 * @throws IOException
 	 */
-	public static String post(String url, String data
-//			, String token
-	) throws Exception {
+	private static String readResponse(HttpURLConnection conn) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		String inputLine;
+		StringBuilder response = new StringBuilder(); // using StringBuilder for the sake of memory and performance
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		return response.toString();
+	}
+
+	/**
+	 * Phuong thuoc ket noi voi server
+	 * @param url dia chi URl cua server
+	 * @param method phuong thuc muon ket noi
+	 * @param token ma bam cua nguoi dung
+	 * @return HttpURLConnection toi server
+	 * @throws IOException
+	 */
+	private static HttpURLConnection getHttpURLConnection(String url, String method, String token) throws IOException {
+		// PhuND-20183968
+		LOGGER.info("Request URL: " + url + "\n");
+		URL line_api_url = new URL(url);
+		HttpURLConnection conn = (HttpURLConnection) line_api_url.openConnection();
+		conn.setDoInput(true);
+		conn.setDoOutput(true);
+		conn.setRequestMethod(method);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Authorization", "Bearer " + token);
+		return conn;
+	}
+
+	/**
+	 * Phuong thuc goi cac API dang POST
+	 * @param url duong dan toi server can request
+	 * @param data du lieu dua len server de xu ly (dang JSON)
+	 * @return response cua server (dang String)
+	 * @throws IOException
+	 */
+	public static String post(String url, String data, String token) throws IOException {
 		allowMethods("PATCH");
-		
-		// phan 1: Setup
+		// setup
+		HttpURLConnection conn = getHttpURLConnection(url, "PATCH", token);
+
+		// gui du lieu
 		String payload = data;
-		LOGGER.info("Request Info:\nRequest URL: " + url + "\n" + "Payload Data: " + payload + "\n");
-		HttpURLConnection conn = setUpConnection(null, url);
-		
-		// phan 2: gui du lieu
 		Writer writer = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
 		writer.write(payload);
 		writer.close();
-		
-		// phan 3: doc du lieu gui ve tu server
-		String response = readRespone(conn);
-		return response;
+
+		// doc du lieu tu server tra ve
+		return readResponse(conn);
 	}
-	
+
 	/**
 	 * Phuong thuc cho phep goi cac loai giao thuc API khac nhau nhu PATCH, PUT, ... (chi hoat dong voi Java 11)
-	 * @deprecated chi hoat dong voi Java <= 11
-	 * @param methods: giao thuc can cho phep (PATCH, PUT, ...)
+	 * @deprecated Chi hoat dong voi Java 11+
+	 * @param methods giao thuc can cho phep ho tro
 	 */
 	private static void allowMethods(String... methods) {
 		try {
@@ -108,52 +133,6 @@ public class API {
 		} catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new IllegalStateException(e);
 		}
-	}
-	
-	/**
-	 * Thiet lap ket noi toi server
-	 * @param token doan ma de xac thuc nguoi dung
-	 * @param url duong dan toi server can request 
-	 * @return connection
-	 * @throws Exception
-	 */
-	private static HttpURLConnection setUpConnection(String token, String url) throws Exception{
-		URL line_api_url = new URL(url);
-		HttpURLConnection conn = (HttpURLConnection) line_api_url.openConnection();
-		conn.setDoInput(true);
-		conn.setDoOutput(true);
-		conn.setRequestMethod("PATCH");
-		conn.setRequestProperty("Content-Type", "application/json");
-		if(token != null) {
-			conn.setRequestProperty("Authorization", "Bearer " + token);
-		}
-		
-		return conn;
-	}
-	
-	/**
-	 * Doc du lieu tra ve tu server
-	 * @param conn: ket noi toi server
-	 * @return response: phan hoi tra ve tu server
-	 * @throws IOException
-	 */
-	private static String readRespone (HttpURLConnection conn) throws IOException {
-		// get data sent back from server
-		BufferedReader in; 
-		String inputLine; 
-		if (conn.getResponseCode() / 100 == 2) {
-			in = new BufferedReader(new InputStreamReader(conn.getInputStream())); 
-			} 
-		else {
-			in = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-		}
-		StringBuilder response = new StringBuilder(); 
-		while ((inputLine = in.readLine()) != null)
-			System.out.println(inputLine); 
-		response.append(inputLine + "\n"); 
-		in.close();
-		LOGGER.info("Response Info: " + response.substring(0, response. length() - 1).toString()); 
-		return response.substring(0, response. length() - 1).toString();
 	}
 
 }

@@ -25,6 +25,7 @@ import utils.Utils;
 import views.screen.BaseScreenHandler;
 import views.screen.popup.PopupScreen;
 import views.screen.shipping.ShippingScreenHandler;
+import controller.shipping_fee.*;
 
 public class CartScreenHandler extends BaseScreenHandler {
 
@@ -104,7 +105,7 @@ public class CartScreenHandler extends BaseScreenHandler {
 	public void requestToPlaceOrder() throws SQLException, IOException {
 		try {
 			// create placeOrderController and process the order
-			PlaceOrderController placeOrderController = new PlaceOrderController();
+			PlaceOrderController placeOrderController = new PlaceOrderController(new ShippingFeeCalculatorImpl());
 			if (placeOrderController.getListCartMedia().size() == 0){
 				PopupScreen.error("You don't have anything to place");
 				return;
